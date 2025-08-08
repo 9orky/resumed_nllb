@@ -15,11 +15,11 @@ jobs:
       changed: ${{ steps.check.outputs.changed }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - id: check
         run: |
-          if [[ "${{ github.event.inputs.force }}" == "true" ]]; then
-            echo "changed=true" >> $GITHUB_OUTPUT
-          elif git diff --quiet HEAD^ HEAD -- poetry.lock pyproject.toml; then
+          if git diff --quiet HEAD^ HEAD -- poetry.lock pyproject.toml; then
             echo "changed=false" >> $GITHUB_OUTPUT
           else
             echo "changed=true" >> $GITHUB_OUTPUT
