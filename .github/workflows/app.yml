@@ -18,16 +18,19 @@ on:
 jobs:
   build-base:
     uses: ./.github/workflows/base.yml
+  
+  get-base-version:
+    uses: ./.github/workflows/base-current.yml
 
   build-app:
     name: Build and Push App Image
-    needs: [get-version, build-base]
+    needs: [build-base, get-version]
     runs-on: ubuntu-latest
 
     steps:
       - name: Determine base version to use
         id: version
-        run: echo "base_version=$${{ inputs.base_version || needs.build-base.outputs.version || needs.get-version.outputs.version }}" >> $GITHUB_OUTPUT
+        run: echo "base_version=$${{ inputs.base_version || needs.build-base.outputs.version || needs.get-base-version.outputs.version }}" >> $GITHUB_OUTPUT
 
       - uses: actions/checkout@v4
 

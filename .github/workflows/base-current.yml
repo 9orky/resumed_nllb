@@ -1,0 +1,21 @@
+name: Base Image Current Version
+
+on:
+  workflow_call:
+    outputs:
+      version:
+        description: "Current Base Image version"
+        value: ${{ jobs.get-version.outputs.version }}
+  workflow_dispatch:
+
+jobs:
+  get-version:
+    name: Get current Base Image version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.set_version.outputs.version }}
+    steps:
+      - id: set_version
+        run: |
+          current=$(curl -s https://hub.docker.com/v2/repositories/${{ secrets.DOCKERHUB_USERNAME }}/resumed-nllb-base/tags | jq -r '.results[].name' | sort -V | tail -n1)
+          echo "version=$current" >> $GITHUB_OUTPUT
