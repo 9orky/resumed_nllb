@@ -24,7 +24,7 @@ jobs:
 
   build-app:
     name: Build and Push App Image
-    needs: [build-base, get-version]
+    needs: [build-base, get-base-version]
     runs-on: ubuntu-latest
 
     steps:
