@@ -43,6 +43,7 @@ jobs:
       - name: Get latest base image version
         id: set_version
         run: |
+          current=${{ needs.get-version.outputs.version }}
           next=$(($current + 1))
           echo "version=$next" >> $GITHUB_OUTPUT
       
