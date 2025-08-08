@@ -30,7 +30,7 @@ jobs:
   build-base:
     name: Build and Push Base Image
     needs: [check-base-changed, get-version]
-    if: needs.check-base-changed.outputs.changed == 'true'
+    if: inputs.force == 'true' || needs.check-base-changed.outputs.changed == 'true'
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.set_version.outputs.version }}
