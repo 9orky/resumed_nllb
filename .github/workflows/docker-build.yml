@@ -1,31 +1,29 @@
-name: Build and Push Docker Images
+name: Build and Push Images
 
 on:
   push:
-    branches:
-      - main
     tags:
       - 'v*.*.*'
 
 jobs:
+  extract-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.VERSION }}
+    steps:
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
+
   build-base:
     name: Build and Push Base Image
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: extract-version
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-
-      - name: Cache Docker layers
-        uses: actions/cache@v4
-        with:
-          path: /tmp/.buildx-cache
-          key: base-${{ runner.os }}-${{ hashFiles('**/poetry.lock', '**/pyproject.toml') }}
-          restore-keys: |
-            base-${{ runner.os }}-
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
@@ -40,25 +38,16 @@ jobs:
           file: Dockerfile.base
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/resumed-nllb-base:${{ github.run_number }}
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/resumed-nllb-base:${{ needs.extract-version.outputs.version }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/resumed-nllb-base:latest
 
   build-app:
     name: Build and Push App Image
-    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [extract-version, build-base]
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
-
-      - name: Install jq
-        run: sudo apt-get update && sudo apt-get install -y jq
-
-      - name: Get latest base image tag from Docker Hub
-        id: get_latest_base_tag
-        run: |
-          latest_tag=$(curl -s "https://registry.hub.docker.com/v2/repositories/9orky/resumed-nllb-base/tags?page_size=100" \
-            | jq -r '.results[].name' | sort -V | tail -1)
-          echo "BASE_TAG=$latest_tag" >> "$GITHUB_OUTPUT"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -69,10 +58,6 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Extract tag version
-        id: get_version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
-
       - name: Build and Push App Image
         uses: docker/build-push-action@v5
         with:
@@ -81,7 +66,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           build-args: |
-            BASE_IMAGE_TAG=${{ steps.get_latest_base_tag.outputs.BASE_TAG }}
+            BASE_IMAGE_TAG=${{ needs.extract-version.outputs.version }}
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/resumed-nllb:${{ steps.get_version.outputs.VERSION }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/resumed-nllb:${{ needs.extract-version.outputs.version }}
             ${{ secrets.DOCKERHUB_USERNAME }}/resumed-nllb:latest
