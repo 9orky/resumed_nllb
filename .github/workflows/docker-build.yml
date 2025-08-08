@@ -15,9 +15,29 @@ jobs:
         id: version
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
 
+  check-base-changed:
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.check.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check if poetry files changed
+        id: check
+        run: |
+          git fetch origin main
+          if git diff --quiet origin/main HEAD -- pyproject.toml poetry.lock; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
   build-base:
     name: Build and Push Base Image
-    needs: extract-version
+    needs: [extract-version, check-base-changed]
+    if: needs.check-base-changed.outputs.changed == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -44,7 +64,7 @@ jobs:
 
   build-app:
     name: Build and Push App Image
-    needs: [extract-version, build-base]
+    needs: [extract-version]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
