@@ -2,6 +2,11 @@ name: Build Base Image
 
 on:
   workflow_call:
+    secrets:
+      DOCKERHUB_USERNAME:
+        required: true
+      DOCKERHUB_TOKEN:
+        required: true
     outputs:
       version:
         description: "Version of the built base image"
