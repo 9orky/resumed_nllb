@@ -28,7 +28,8 @@ jobs:
         id: check
         run: |
           git fetch origin main
-          if git diff --quiet origin/main HEAD -- pyproject.toml poetry.lock; then
+          BASE=$(git merge-base HEAD origin/main)
+          if git diff --quiet "$BASE" HEAD -- poetry.lock pyproject.toml; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
             echo "changed=true" >> "$GITHUB_OUTPUT"
