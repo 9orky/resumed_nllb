@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "resumed-nllb"
 version = "0.1.0"
-description = "Flask translation API using Hugging Face models"
+description = "Flask translation API using HuggingFace models"
 authors = ["Tomasz Szpak"]
 license = "MIT"
 readme = "README.md"
