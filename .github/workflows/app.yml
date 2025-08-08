@@ -7,9 +7,13 @@ on:
   workflow_dispatch:
     inputs:
       base_version:
-        description: 'Version of the base image to use'
+        description: 'Base Version of the image to use'
         required: true
         default: ''
+      version:
+        description: 'Version of the image if no tag is provided'
+        required: true
+        default: 'v..'
 
 jobs:
   build-base:
@@ -49,7 +53,12 @@ jobs:
 
       - name: Extract app version from tag
         id: get_version
-        run: echo "app_version=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            echo "app_version=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
+          else
+            echo "app_version=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Build and Push App Image
         uses: docker/build-push-action@v5
