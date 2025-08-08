@@ -15,7 +15,7 @@ transformers = "^4.55.0"
 gunicorn = "^23.0.0"
 
 [tool.poetry.scripts]
-resumed = "main:app"
+resumed = "main:create_app"
 
 [build-system]
 requires = ["poetry-core"]

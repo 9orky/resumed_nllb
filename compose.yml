@@ -11,3 +11,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports: ["8888:8080"]
+
+  translator-pl-en:
+    image: 9orky/resumed-nllb:latest
+    ports: ["7777:8080"]
