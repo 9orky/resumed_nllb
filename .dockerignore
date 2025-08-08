@@ -1,0 +1,16 @@
+*.pyc
+*.pyo
+*.log
+__pycache__
+.storage
+.env
+.git
+.venv
+.vscode
+.idea
+.dockerignore
+.gitignore
+compose.yml
+deploy.yml
+Makefile
+Dockerfile
