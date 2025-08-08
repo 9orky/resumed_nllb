@@ -1,4 +1,4 @@
-name: Base Image Current Version
+name: Check Base Image Current Version
 
 on:
   workflow_call:

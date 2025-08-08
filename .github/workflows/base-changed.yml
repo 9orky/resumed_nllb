@@ -1,4 +1,4 @@
-name: Check if Base Image poetry files changed
+name: Check If Base Image Changed
 
 on:
   workflow_call:

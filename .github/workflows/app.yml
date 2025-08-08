@@ -18,9 +18,14 @@ on:
 jobs:
   build-base:
     uses: ./.github/workflows/base.yml
-  
+    secrets:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+
   get-base-version:
     uses: ./.github/workflows/base-current.yml
+    secrets:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
 
   build-app:
     name: Build and Push App Image

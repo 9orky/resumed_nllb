@@ -19,6 +19,8 @@ jobs:
 
   get-version:
     uses: ./.github/workflows/base-current.yml
+    secrets:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
 
   build-base:
     name: Build and Push Base Image
