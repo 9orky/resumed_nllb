@@ -4,16 +4,12 @@ on:
   push:
     tags:
       - 'v*'
-  workflow_call:
-    inputs:
-      base_version:
-        required: true
-        type: string
   workflow_dispatch:
     inputs:
       base_version:
         description: 'Version of the base image to use'
         required: true
+        default: ''
 
 jobs:
   build-base:
