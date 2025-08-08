@@ -11,10 +11,19 @@ jobs:
 
   build-app:
     name: Build and Push App Image
-    needs: build-base
+    needs: [get-version, build-base]
     runs-on: ubuntu-latest
 
     steps:
+      - name: Determine base version to use
+        id: version
+        run: |
+          if [ "${{ needs.build-base.result }}" = "success" ]; then
+            echo "base_version=${{ needs.build-base.outputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "base_version=${{ needs.get-version.outputs.version }}" >> $GITHUB_OUTPUT
+          fi
+
       - uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
@@ -26,9 +35,9 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Extract version from tag
+      - name: Extract app version from tag
         id: get_version
-        run: echo "version=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
+        run: echo "app_version=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
 
       - name: Build and Push App Image
         uses: docker/build-push-action@v5
@@ -37,8 +46,8 @@ jobs:
           file: Dockerfile
           platforms: linux/amd64,linux/arm64
           build-args: |
-            BASE_IMAGE_TAG=${{ needs.build-base.outputs.version }}
+            BASE_IMAGE_TAG=${{ steps.version.outputs.base_version }}
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/resumed-nllb:${{ steps.get_version.outputs.version }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/resumed-nllb:${{ steps.get_version.outputs.app_version }}
             ${{ secrets.DOCKERHUB_USERNAME }}/resumed-nllb:latest

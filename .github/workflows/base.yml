@@ -28,9 +28,20 @@ jobs:
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
+  get-version:
+    name: Get current Base Image version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.set_version.outputs.version }}
+    steps:
+      - id: set_version
+        run: |
+          latest=$(curl -s https://hub.docker.com/v2/repositories/${{ secrets.DOCKERHUB_USERNAME }}/resumed-nllb-base/tags | jq -r '.results[].name' | sort -V | tail -n1)
+          echo "version=$latest" >> $GITHUB_OUTPUT
+
   build-base:
     name: Build and Push Base Image
-    needs: check-base-changed
+    needs: [check-base-changed, get-version]
     if: needs.check-base-changed.outputs.changed == 'true'
     runs-on: ubuntu-latest
     outputs:
@@ -44,8 +55,7 @@ jobs:
       - name: Get latest base image version
         id: set_version
         run: |
-          latest=$(curl -s https://hub.docker.com/v2/repositories/${{ secrets.DOCKERHUB_USERNAME }}/resumed-nllb-base/tags | jq -r '.results[].name' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n1)
-          next=$(echo $latest | awk -F. '{$3+=1; print $1"."$2"."$3}')
+          next=$(($latest + 1))
           echo "version=$next" >> $GITHUB_OUTPUT
 
       - name: Login to Docker Hub
