@@ -40,7 +40,7 @@ jobs:
           file: Dockerfile.base
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: gorky/resumed-nllb-base:${{ github.run_number }}
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/resumed-nllb-base:${{ github.run_number }}
 
   build-app:
     name: Build and Push App Image
@@ -71,5 +71,5 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            gorky/resumed-nllb:${{ steps.get_version.outputs.VERSION }}
-            gorky/resumed-nllb:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/resumed-nllb:${{ steps.get_version.outputs.VERSION }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/resumed-nllb:latest
