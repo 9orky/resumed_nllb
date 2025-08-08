@@ -1,0 +1,64 @@
+name: Build Base Image
+
+on:
+  workflow_call:
+    outputs:
+      version:
+        description: "Version of the built base image"
+        value: ${{ jobs.build-base.outputs.version }}
+
+jobs:
+  check-base-changed:
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.check.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check if poetry files changed
+        id: check
+        run: |
+          git fetch origin main
+          BASE=$(git merge-base HEAD origin/main)
+          if git diff --quiet "$BASE" HEAD -- poetry.lock pyproject.toml; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  build-base:
+    name: Build and Push Base Image
+    needs: check-base-changed
+    if: needs.check-base-changed.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.set_version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Get latest base image version
+        id: set_version
+        run: |
+          latest=$(curl -s https://hub.docker.com/v2/repositories/${{ secrets.DOCKERHUB_USERNAME }}/resumed-nllb-base/tags | jq -r '.results[].name' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n1)
+          next=$(echo $latest | awk -F. '{$3+=1; print $1"."$2"."$3}')
+          echo "version=$next" >> $GITHUB_OUTPUT
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and Push Base Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile.base
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/resumed-nllb-base:${{ steps.set_version.outputs.version }}
