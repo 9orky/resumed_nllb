@@ -24,3 +24,5 @@ jobs:
           else
             echo "changed=true" >> $GITHUB_OUTPUT
           fi
+      - name: Print check result
+        run: echo "Base Image content - ${{ steps.check.outputs.changed }}"

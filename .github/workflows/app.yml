@@ -31,6 +31,9 @@ jobs:
       - name: Determine base version to use
         id: version
         run: echo "base_version=$${{ inputs.base_version || needs.build-base.outputs.version || needs.get-base-version.outputs.version }}" >> $GITHUB_OUTPUT
+      
+      - name: Print resolved base version
+        run: echo "Resolved Base version is ${{ steps.version.outputs.base_version }}"
 
       - uses: actions/checkout@v4
 
