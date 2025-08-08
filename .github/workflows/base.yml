@@ -6,6 +6,12 @@ on:
       version:
         description: "Version of the built base image"
         value: ${{ jobs.build-base.outputs.version }}
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Force rebuild even if poetry files did not change'
+        required: false
+        default: 'false'
 
 jobs:
   check-base-changed:
@@ -14,18 +20,14 @@ jobs:
       changed: ${{ steps.check.outputs.changed }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Check if poetry files changed
-        id: check
+      - id: check
         run: |
-          git fetch origin main
-          BASE=$(git merge-base HEAD origin/main)
-          if git diff --quiet "$BASE" HEAD -- poetry.lock pyproject.toml; then
-            echo "changed=false" >> "$GITHUB_OUTPUT"
+          if [[ "${{ github.event.inputs.force }}" == "true" ]]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          elif git diff --quiet HEAD^ HEAD -- poetry.lock pyproject.toml; then
+            echo "changed=false" >> $GITHUB_OUTPUT
           else
-            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "changed=true" >> $GITHUB_OUTPUT
           fi
 
   get-version:
@@ -36,8 +38,8 @@ jobs:
     steps:
       - id: set_version
         run: |
-          latest=$(curl -s https://hub.docker.com/v2/repositories/${{ secrets.DOCKERHUB_USERNAME }}/resumed-nllb-base/tags | jq -r '.results[].name' | sort -V | tail -n1)
-          echo "version=$latest" >> $GITHUB_OUTPUT
+          current=$(curl -s https://hub.docker.com/v2/repositories/${{ secrets.DOCKERHUB_USERNAME }}/resumed-nllb-base/tags | jq -r '.results[].name' | sort -V | tail -n1)
+          echo "version=$current" >> $GITHUB_OUTPUT
 
   build-base:
     name: Build and Push Base Image
@@ -55,7 +57,7 @@ jobs:
       - name: Get latest base image version
         id: set_version
         run: |
-          next=$(($latest + 1))
+          next=$(($current + 1))
           echo "version=$next" >> $GITHUB_OUTPUT
 
       - name: Login to Docker Hub

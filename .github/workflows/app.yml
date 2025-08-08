@@ -4,6 +4,16 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_call:
+    inputs:
+      base_version:
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      base_version:
+        description: 'Version of the base image to use'
+        required: true
 
 jobs:
   build-base:
@@ -17,12 +27,7 @@ jobs:
     steps:
       - name: Determine base version to use
         id: version
-        run: |
-          if [ "${{ needs.build-base.result }}" = "success" ]; then
-            echo "base_version=${{ needs.build-base.outputs.version }}" >> $GITHUB_OUTPUT
-          else
-            echo "base_version=${{ needs.get-version.outputs.version }}" >> $GITHUB_OUTPUT
-          fi
+        run: echo "base_version=$${{ inputs.base_version || needs.build-base.outputs.version || needs.get-version.outputs.version }}" >> $GITHUB_OUTPUT
 
       - uses: actions/checkout@v4
 
