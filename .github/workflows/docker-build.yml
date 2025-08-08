@@ -50,6 +50,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Get latest base image tag from Docker Hub
+        id: get_latest_base_tag
+        run: |
+          latest_tag=$(curl -s "https://registry.hub.docker.com/v2/repositories/9orky/resumed-nllb-base/tags?page_size=100" \
+            | jq -r '.results[].name' | sort -V | tail -1)
+          echo "BASE_TAG=$latest_tag" >> "$GITHUB_OUTPUT"
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -70,6 +80,8 @@ jobs:
           file: Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
+          build-args: |
+            BASE_IMAGE_TAG=${{ steps.get_latest_base_tag.outputs.BASE_TAG }}
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/resumed-nllb:${{ steps.get_version.outputs.VERSION }}
             ${{ secrets.DOCKERHUB_USERNAME }}/resumed-nllb:latest
