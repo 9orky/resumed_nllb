@@ -4,12 +4,15 @@ import time
 from typing import List
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 
-from .config import MODEL_NAME, SRC_LANG, TGT_LANG
-
+from .config import MODEL_NAME, SRC_LANG, TGT_LANG, CUDA_ENABLED
+from .logger import logger
 
 tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 model = AutoModelForSeq2SeqLM.from_pretrained(MODEL_NAME)
 
+if CUDA_ENABLED:
+    model = model.to('cuda')
+    logger.info('CUDA is enabled, switched model')
 
 try:
     forced_id: int = tokenizer.lang_code_to_id[TGT_LANG]
@@ -47,6 +50,10 @@ def translate_texts(
         truncation=True,
         max_length=max_length,
     )
+
+    if CUDA_ENABLED:
+        inputs = inputs.to('cuda')
+        logger.info('CUDA is enabled, switched inputs')
 
     num_input_tokens = inputs['input_ids'].numel()
 

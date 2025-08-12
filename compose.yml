@@ -2,3 +2,5 @@ services:
   translator-pl-en:
     image: 9orky/resumed-nllb:latest
     ports: ["8080:8080"]
+    environment:
+      CUDA_ENABLED: 1

@@ -73,15 +73,24 @@ clean:
 	@echo "Cleanup complete"
 
 build-base:
-	docker compose build nllb-base
+	docker compose -f compose-dev.yml build nllb-base
 
-publish-base:
-	docker tag resumed-nllb-base:latest 9orky/resumed-nllb-base:latest
-	docker push 9orky/resumed-nllb-base:latest
+bb:
+	docker build \
+	--platform linux/arm64 \
+	-f Dockerfile.base \
+	-t resumed-nllb-base:latest \
+	.
 
 build-app:
-	docker compose build nllb-pl-en
+	DOCKER_BUILDKIT=0 docker compose -f compose-dev.yml build nllb-pl-en
 
-publish-app:
-	docker tag resumed-nllb:latest 9orky/resumed-nllb:latest
-	docker push 9orky/resumed-nllb:latest
+ba:
+	docker build \
+	--build-arg BASE_IMAGE=resumed-nllb-base \
+	-f Dockerfile \
+	-t resumed-nllb:latest \
+	.
+
+run-app:
+	docker compose -f compose-dev.yml up nllb-pl-en

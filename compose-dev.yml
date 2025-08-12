@@ -4,10 +4,17 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.base
+      # args:
+      #   BASE_IMAGE: python:3.11-slim
+      #   POETRY_CREATE_VENV: true
 
   nllb-pl-en:
     image: resumed-nllb:latest
+    ports: ["7777:8080"]
     build:
       context: .
       dockerfile: Dockerfile
-    ports: ["8888:8080"]
+      args:
+        BASE_IMAGE: resumed-nllb-base
+    environment:
+      CUDA_ENABLED: 0

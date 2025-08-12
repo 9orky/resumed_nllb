@@ -1,6 +1,7 @@
+ARG BASE_IMAGE=9orky/resumed-nllb-base
 ARG BASE_IMAGE_TAG=latest
 
-FROM 9orky/resumed-nllb-base:${BASE_IMAGE_TAG}
+FROM ${BASE_IMAGE}:${BASE_IMAGE_TAG}
 
 WORKDIR /app
 

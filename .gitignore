@@ -20,3 +20,4 @@ dist/
 lc.txt
 *.log
 *.pid
+build
